@@ -1,0 +1,16 @@
+import { useEffect, useState } from 'react'; import { Link, useNavigate } from 'react-router-dom'; import api from '../services/api'; import PropertyCard from '../components/PropertyCard';
+const CATS = [['Land and plots', '/buy/land'], ['Houses', '/buy/houses'], ['Apartments', '/buy/apartments'], ['Villas', '/buy?propertyType=VILLA'], ['Commercial', '/buy/commercial']];
+export default function Home() { const nav = useNavigate(); const [f, setF] = useState({ transactionType: 'BUY', propertyType: '', city: '', maxPrice: '' }); const [items, setItems] = useState(null);
+  useEffect(() => { api.get('/properties', { params: { limit: 6 } }).then((r) => setItems(r.data.items)).catch(() => setItems([])); }, []);
+  const go = (e) => { e.preventDefault(); const p = new URLSearchParams(Object.entries(f).filter(([, v]) => v)); nav('/buy?' + p); };
+  const u = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  return (<main>
+    <section className="hero"><div className="wrap hero-in"><div><h1>The right property, with a consultant beside you.</h1><p>SM Consultant helps you buy, sell, rent and lease land and homes — from the first search to the site visit.</p></div>
+      <form className="search" onSubmit={go}><label>I want to<select value={f.transactionType} onChange={u('transactionType')}><option value="BUY">Buy</option><option value="RENT">Rent</option><option value="LEASE">Lease</option></select></label>
+        <label>Property<select value={f.propertyType} onChange={u('propertyType')}><option value="">Any type</option><option value="LAND,PLOT">Land and plots</option><option value="HOUSE">House</option><option value="APARTMENT">Apartment</option><option value="VILLA">Villa</option><option value="COMMERCIAL">Commercial</option></select></label>
+        <label>City or locality<input value={f.city} onChange={u('city')} placeholder="e.g. Whitefield" /></label><label>Max budget (₹)<input type="number" value={f.maxPrice} onChange={u('maxPrice')} placeholder="Any" /></label><button className="btn">Search properties</button></form></div></section>
+    <section className="wrap sec"><h2>Browse by type</h2><div className="cats">{CATS.map(([l, to]) => <Link key={l} to={to} className="cat">{l}</Link>)}</div></section>
+    <section className="wrap sec"><div className="sec-h"><h2>Featured properties</h2><Link to="/buy">View all</Link></div>
+      {!items && <p className="state">Loading properties…</p>}{items && !items.length && <p className="state">No published properties yet. Check back soon.</p>}<div className="grid">{items?.map((p) => <PropertyCard key={p._id} p={p} />)}</div></section>
+    <section className="wrap sec"><h2>How it works</h2><ol className="steps"><li><b>Search or submit.</b> Browse listings, or send us the details of your land or house.</li><li><b>Talk to a consultant.</b> We discuss your requirements and check the details.</li><li><b>Visit and follow up.</b> We arrange site visits and stay with you until the deal is done.</li></ol></section>
+    <section className="wrap sec"><div className="cta"><div><h2>Own land or a house to sell, rent or lease?</h2><p>Submit the details. Our team reviews every listing before it goes live.</p></div><Link className="btn" to="/owner/submit-property">Submit your property</Link></div></section></main>); }

@@ -1,0 +1,9 @@
+import { useState } from 'react'; import { Link, useNavigate, useLocation } from 'react-router-dom'; import { useAuth, home } from '../context/AuthContext'; import { errMsg } from '../services/api';
+export default function Auth({ mode }) { const reg = mode === 'register'; const { login, register } = useAuth(); const nav = useNavigate(); const loc = useLocation(); const [f, setF] = useState({ role: 'CUSTOMER' }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const u = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const submit = async (e) => { e.preventDefault(); setErr(''); if (reg && f.password !== f.confirm) return setErr('Passwords do not match'); setBusy(true); try { const user = await (reg ? register(f) : login(f)); nav(loc.state?.from || home(user), { replace: true }); } catch (x) { setErr(errMsg(x)); setBusy(false); } };
+  return (<main className="wrap auth"><form onSubmit={submit} className="panel"><h1>{reg ? 'Create your account' : 'Welcome back'}</h1>{err && <p className="error" role="alert">{err}</p>}
+    {reg && <><label>Full name<input required onChange={u('fullName')} /></label><label>Phone<input type="tel" onChange={u('phone')} /></label><label>I am a<select onChange={u('role')}><option value="CUSTOMER">Customer looking for a property</option><option value="OWNER">Owner submitting a property</option></select></label></>}
+    <label>Email<input type="email" required onChange={u('email')} /></label><label>Password<input type="password" required minLength={reg ? 8 : 1} onChange={u('password')} /></label>
+    {reg && <label>Confirm password<input type="password" required onChange={u('confirm')} /></label>}<button className="btn" disabled={busy}>{busy ? 'Please wait…' : reg ? 'Create account' : 'Log in'}</button>
+    <p>{reg ? <>Already registered? <Link to="/login">Log in</Link></> : <>New here? <Link to="/register">Create an account</Link></>}</p></form></main>); }
